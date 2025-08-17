@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptCraft Pro | Plateforme IA Premium</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-functions-compat.js"></script>
+  <style>
+    :root {
+      --dark-green: #075E54;
+      --bright-green: #25D366;
+      --light-gold: #FFD700;
+      --rich-gold: #D4AF37;
+      --pure-white: #FFFFFF;
+      --light-gray: #F5F5F5;
+      --dark-text: #333333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      background-color: var(--light-gray);
+      color: var(--dark-text);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      position: relative;
+      min-height: 100vh;
+      background: white;
+      padding-bottom: 80px;
+    }
+
+    /* Header Styles */
+    .header {
+      background: linear-gradient(135deg, var(--dark-green), var(--bright-green));
+      color: white;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Navigation Styles */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--dark-green);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: all 0.3s;
+      padding: 0 10px;
+    }
+
+    .nav-item.active {
+      color: var(--light-gold);
+      transform: translateY(-3px);
+    }
+
+    .nav-icon {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    /* Card Styles */
+    .card {
+      background: var(--pure-white);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.03);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .gold-card {
+      border: 2px solid var(--light-gold);
+      background: linear-gradient(135deg, #fff9e6, #fff);
+    }
+
+    /* Button Styles */
+    .btn {
+      padding: 12px 24px;
+      border-radius: 25px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-block;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: var(--bright-green);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--dark-green);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--light-gold), var(--rich-gold));
+      color: white;
+      font-weight: 700;
+    }
+
+    .btn-gold:hover {
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    /* Form Elements */
+    textarea, select, input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Utility Classes */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .mt-1 { margin-top: 10px; }
+    .mt-2 { margin-top: 20px; }
+    .mb-1 { margin-bottom: 10px; }
+    .error { color: #ff4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>PromptCraft Pro</h1>
+      <div id="userCredits">Chargement...</div>
+    </header>
+
+    <!-- Home Page -->
+    <div id="home-page" class="page active-page animate-in">
+      <div class="card text-center">
+        <div style="font-size: 3rem; color: var(--rich-gold);">✨</div>
+        <h2>Boostez votre productivité avec l'IA</h2>
+        <p class="mt-1">Générez des prompts optimisés et automatisez vos tâches</p>
+        <button class="btn btn-primary mt-2" onclick="showPage('prompts')">Commencer</button>
+      </div>
+
+      <div class="card gold-card">
+        <h3 style="color: var(--rich-gold);">💎 Version Premium</h3>
+        <p class="mt-1">Accès illimité pour seulement</p>
+        <p style="font-size: 1.5rem; color: var(--rich-gold); font-weight: bold;" class="mt-1">1000 FCFA/mois</p>
+        <button class="btn btn-gold mt-1" onclick="showPage('premium')">Découvrir</button>
+      </div>
+
+      <div class="card">
+        <h3>Comment ça marche ?</h3>
+        <ol style="padding-left: 20px; margin-top: 10px;">
+          <li class="mt-1">2 requêtes gratuites par jour</li>
+          <li class="mt-1">Générez des prompts optimisés</li>
+          <li class="mt-1">Automatisez vos tâches répétitives</li>
+          <li class="mt-1">Gagnez des crédits via le parrainage</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Prompts Page -->
+    <div id="prompts-page" class="page">
+      <div class="card">
+        <h2>Générateur de Prompts IA</h2>
+        <p>Créez des prompts ultra-optimisés pour ChatGPT, Midjourney, etc.</p>
+        
+        <textarea id="prompt-input" placeholder="Ex: J'ai besoin d'un prompt pour générer des images de paysages futuristes..." rows="5"></textarea>
+        
+        <button class="btn btn-primary" onclick="generatePrompt()">
+          <span id="generate-text">Générer</span>
+          <span id="generate-spinner" class="spinner hidden"></span>
+        </button>
+        <p id="prompt-error" class="error hidden"></p>
+      </div>
+
+      <div id="prompt-result" class="card hidden">
+        <h3>Votre prompt optimisé :</h3>
+        <div id="generated-prompt" style="padding: 12px; background: #f9f9f9; border-radius: 8px; margin: 12px 0;"></div>
+        <button class="btn btn-primary" onclick="copyToClipboard('generated-prompt')">Copier</button>
+      </div>
+
+      <div class="card">
+        <h3>Exemples populaires :</h3>
+        <ul style="padding-left: 20px; margin-top: 10px;">
+          <li class="mt-1">"Prompt pour écrire un scénario de film captivant"</li>
+          <li class="mt-1">"Générer une description de produit e-commerce"</li>
+          <li class="mt-1">"Créer un plan de cours sur l'intelligence artificielle"</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Tasks Page -->
+    <div id="tasks-page" class="page">
+      <div class="card">
+        <h2>Micro-Tâches Automatisées</h2>
+        <p>Optimisez votre workflow avec nos outils IA</p>
+        
+        <select id="task-selector">
+          <option value="rewrite">Reformuler un texte</option>
+          <option value="summarize">Résumer un texte</option>
+          <option value="translate">Traduire (FR → EN)</option>
+          <option value="code">Générer du code</option>
+        </select>
+        
+        <textarea id="task-input" placeholder="Collez votre texte ici..." rows="5"></textarea>
+        
+        <button class="btn btn-primary" onclick="runTask()">
+          <span id="task-text">Exécuter</span>
+          <span id="task-spinner" class="spinner hidden"></span>
+        </button>
+        <p id="task-error" class="error hidden"></p>
+      </div>
+
+      <div id="task-result" class="card hidden">
+        <h3>Résultat :</h3>
+        <div id="task-output" style="padding: 12px; background: #f9f9f9; border-radius: 8px; margin: 12px 0;"></div>
+        <button class="btn btn-primary" onclick="copyToClipboard('task-output')">Copier</button>
+      </div>
+
+      <div class="card">
+        <h3>Pourquoi utiliser nos outils ?</h3>
+        <ul style="padding-left: 20px; margin-top: 10px;">
+          <li class="mt-1">Gagnez du temps sur les tâches répétitives</li>
+          <li class="mt-1">Résultats optimisés par l'IA de pointe</li>
+          <li class="mt-1">Interface simple et intuitive</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Sponsor Page -->
+    <div id="sponsor-page" class="page">
+      <div class="card gold-card text-center">
+        <h2 style="color: var(--rich-gold);">Programme de Parrainage</h2>
+        <p class="mt-1">Gagnez 5 crédits par ami invité !</p>
+        <div style="font-size: 3rem; margin: 15px 0;">👥</div>
+      </div>
+
+      <div class="card">
+        <h3>Votre lien de parrainage :</h3>
+        <input type="text" id="sponsor-link" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0;">
+        <button class="btn btn-primary" onclick="copySponsorLink()">Copier le lien</button>
+        <p class="mt-1">Partagez ce lien pour gagner des crédits</p>
+      </div>
+
+      <div class="card">
+        <h3>Vos filleuls :</h3>
+        <div id="sponsored-users" style="margin-top: 10px;">
+          <p>Chargement de votre réseau...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Comment ça marche ?</h3>
+        <ol style="padding-left: 20px; margin-top: 10px;">
+          <li class="mt-1">Partagez votre lien unique</li>
+          <li class="mt-1">Vos amis s'inscrivent via votre lien</li>
+          <li class="mt-1">Vous recevez 5 crédits par filleul</li>
+          <li class="mt-1">Ils reçoivent 2 crédits bonus</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Premium Page -->
+    <div id="premium-page" class="page">
+      <div class="card gold-card text-center">
+        <h2 style="color: var(--rich-gold);">Passer à Premium</h2>
+        <p class="mt-1">Débloquez toutes les fonctionnalités</p>
+        <div style="font-size: 3rem; margin: 15px 0;">💎</div>
+      </div>
+
+      <div class="card">
+        <h3>Abonnement Mensuel</h3>
+        <p style="font-size: 1.8rem; color: var(--rich-gold); font-weight: bold;" class="mt-1">1000 FCFA</p>
+        <ul style="padding-left: 20px; margin-top: 10px;">
+          <li class="mt-1">✅ Requêtes illimitées</li>
+          <li class="mt-1">✅ Accès à toutes les fonctionnalités</li>
+          <li class="mt-1">✅ Support prioritaire</li>
+          <li class="mt-1">✅ Nouveaux outils en avant-première</li>
+        </ul>
+        <button class="btn btn-gold mt-2" onclick="showPaymentOptions()">S'abonner maintenant</button>
+      </div>
+
+      <div id="payment-options" class="card hidden">
+        <h3>Choisissez votre méthode de paiement :</h3>
+        <div class="payment-method mt-2" onclick="selectPayment('orange')">
+          <div style="background: #FF6600; color: white; padding: 12px; border-radius: 8px; text-align: center;">
+            <p style="font-weight: bold;">Orange Money</p>
+            <p>676335729 (Aliou)</p>
+          </div>
+        </div>
+        <div class="payment-method mt-1" onclick="selectPayment('mtn')">
+          <div style="background: #FFCC00; color: #000; padding: 12px; border-radius: 8px; text-align: center;">
+            <p style="font-weight: bold;">MTN Mobile Money</p>
+            <p>656288210 (Kouoh Borel)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Témoignages</h3>
+        <div style="margin-top: 10px;">
+          <p>"Ce service a révolutionné ma productivité !" - Jean K., Entrepreneur</p>
+          <p class="mt-1">"Je gagne 2 heures par jour grâce à ces outils" - Aïcha D., Rédactrice</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item active" onclick="showPage('home')">
+        <span class="nav-icon">🏠</span>
+        <span>Accueil</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('prompts')">
+        <span class="nav-icon">✨</span>
+        <span>Prompts</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('tasks')">
+        <span class="nav-icon">⚡</span>
+        <span>Tâches</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('sponsor')">
+        <span class="nav-icon">👥</span>
+        <span>Parrainage</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('premium')">
+        <span class="nav-icon">💎</span>
+        <span>Premium</span>
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    // ==========================================
+    // INITIALISATION FIREBASE
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "VOTRE_CLE_API_FIREBASE",
+      authDomain: "VOTRE_PROJET.firebaseapp.com",
+      projectId: "VOTRE_PROJET",
+      storageBucket: "VOTRE_PROJET.appspot.com",
+      messagingSenderId: "NUMERO_UNIQUE",
+      appId: "APP_ID"
+    };
+
+    // Initialiser Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const functions = firebase.functions();
+
+    // ==========================================
+    // ÉTAT DE L'APPLICATION
+    // ==========================================
+    let userData = {
+      uid: null,
+      isPremium: false,
+      credits: 0,
+      requestsToday: 0,
+      lastRequestDate: null,
+      sponsoredUsers: []
+    };
+
+    // ==========================================
+    // FONCTIONS D'AUTHENTIFICATION
+    // ==========================================
+    function initAuth() {
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          // Utilisateur connecté
+          userData.uid = user.uid;
+          loadUserData();
+          checkSponsorLink();
+        } else {
+          // Créer un compte anonyme
+          auth.signInAnonymously()
+            .catch(error => console.error("Erreur d'authentification:", error));
+        }
+      });
+    }
+
+    // ==========================================
+    // FONCTIONS FIRESTORE
+    // ==========================================
+    async function loadUserData() {
+      try {
+        const doc = await db.collection("users").doc(userData.uid).get();
+        if (doc.exists) {
+          const data = doc.data();
+          userData = {
+            ...userData,
+            isPremium: data.isPremium || false,
+            credits: data.credits || 0,
+            requestsToday: data.requestsToday || 0,
+            lastRequestDate: data.lastRequestDate?.toDate() || null,
+            sponsoredUsers: data.sponsoredUsers || []
+          };
+          
+          // Vérifier si c'est un nouveau jour
+          checkNewDay();
+          updateUI();
+        } else {
+          // Créer un nouveau document utilisateur
+          await createNewUser();
+        }
+      } catch (error) {
+        console.error("Erreur Firestore:", error);
+      }
+    }
+
+    async function createNewUser() {
+      try {
+        await db.collection("users").doc(userData.uid).set({
+          isPremium: false,
+          credits: 2, // Crédits bonus pour nouveau compte
+          requestsToday: 0,
+          lastRequestDate: null,
+          sponsoredUsers: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        loadUserData();
+      } catch (error) {
+        console.error("Erreur création utilisateur:", error);
+      }
+    }
+
+    async function updateUserData() {
+      try {
+        await db.collection("users").doc(userData.uid).update({
+          credits: userData.credits,
+          requestsToday: userData.requestsToday,
+          lastRequestDate: userData.lastRequestDate
+        });
+      } catch (error) {
+        console.error("Erreur mise à jour utilisateur:", error);
+      }
+    }
+
+    // ==========================================
+    // FONCTIONS CLOUD FUNCTIONS
+    // ==========================================
+    async function callOpenAI(prompt, taskType = null) {
+      try {
+        let cloudFunction;
+        if (taskType) {
+          cloudFunction = functions.httpsCallable('executeTask');
+          return await cloudFunction({ prompt, taskType });
+        } else {
+          cloudFunction = functions.httpsCallable('generatePrompt');
+          return await cloudFunction({ prompt });
+        }
+      } catch (error) {
+        console.error("Erreur Cloud Function:", error);
+        throw error;
+      }
+    }
+
+    async function processPayment(paymentMethod) {
+      try {
+        const processPayment = functions.httpsCallable('processPayment');
+        const result = await processPayment({
+          amount: 1000,
+          method: paymentMethod,
+          userId: userData.uid
+        });
+        return result.data;
+      } catch (error) {
+        console.error("Erreur paiement:", error);
+        throw error;
+      }
+    }
+
+    async function registerSponsor(sponsorId) {
+      try {
+        const registerSponsor = functions.httpsCallable('registerSponsor');
+        const result = await registerSponsor({
+          sponsorId,
+          newUserId: userData.uid
+        });
+        return result.data;
+      } catch (error) {
+        console.error("Erreur parrainage:", error);
+        throw error;
+      }
+    }
+
+    // ==========================================
+    // FONCTIONS PRINCIPALES
+    // ==========================================
+    async function generatePrompt() {
+      if (!checkRequestLimit()) return;
+      
+      const input = document.getElementById('prompt-input').value;
+      if (!input) {
+        showError('prompt-error', 'Veuillez entrer une description');
+        return;
+      }
+
+      toggleLoading('generate', true);
+
+      try {
+        const response = await callOpenAI(input);
+        const result = response.data;
+        
+        document.getElementById('generated-prompt').textContent = result;
+        document.getElementById('prompt-result').classList.remove('hidden');
+        document.getElementById('prompt-error').classList.add('hidden');
+        
+        // Mettre à jour le compteur
+        updateRequestCounter();
+      } catch (error) {
+        showError('prompt-error', 'Erreur lors de la génération. Veuillez réessayer.');
+      } finally {
+        toggleLoading('generate', false);
+      }
+    }
+
+    async function runTask() {
+      if (!checkRequestLimit()) return;
+      
+      const taskType = document.getElementById('task-selector').value;
+      const input = document.getElementById('task-input').value;
+      if (!input) {
+        showError('task-error', 'Veuillez entrer un texte');
+        return;
+      }
+
+      toggleLoading('task', true);
+
+      try {
+        const response = await callOpenAI(input, taskType);
+        const result = response.data;
+        
+        document.getElementById('task-output').textContent = result;
+        document.getElementById('task-result').classList.remove('hidden');
+        document.getElementById('task-error').classList.add('hidden');
+        
+        // Mettre à jour le compteur
+        updateRequestCounter();
+      } catch (error) {
+        showError('task-error', 'Erreur lors de l\'exécution de la tâche. Veuillez réessayer.');
+      } finally {
+        toggleLoading('task', false);
+      }
+    }
+
+    // ==========================================
+    // FONCTIONS UTILITAIRES
+    // ==========================================
+    function checkRequestLimit() {
+      if (userData.isPremium) return true;
+      
+      const remaining = 2 - userData.requestsToday;
+      if (remaining <= 0) {
+        alert(`Vous avez épuisé vos 2 requêtes gratuites aujourd'hui. Passez à Premium pour un accès illimité !`);
+        showPage('premium');
+        return false;
+      }
+      
+      return true;
+    }
+
+    function updateRequestCounter() {
+      if (!userData.isPremium) {
+        userData.requestsToday++;
+        userData.lastRequestDate = new Date();
+        updateUserData();
+      }
+      updateUI();
+    }
+
+    function checkNewDay() {
+      const today = new Date().toDateString();
+      if (userData.lastRequestDate?.toDateString() !== today) {
+        userData.requestsToday = 0;
+        userData.lastRequestDate = new Date();
+        updateUserData();
+      }
+    }
+
+    function updateUI() {
+      const creditsText = userData.isPremium 
+        ? "Compte Premium - Requêtes illimitées" 
+        : `Requêtes restantes aujourd'hui: ${2 - userData.requestsToday}`;
+      
+      document.getElementById('userCredits').textContent = creditsText;
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active-page');
+        page.style.display = 'none';
+      });
+      
+      const page = document.getElementById(`${pageId}-page`);
+      page.style.display = 'block';
+      setTimeout(() => {
+        page.classList.add('active-page');
+      }, 10);
+      
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+    }
+
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text)
+        .then(() => alert('Copié dans le presse-papier !'))
+        .catch(err => console.error('Erreur copie:', err));
+    }
+
+    function copySponsorLink() {
+      const link = document.getElementById('sponsor-link');
+      link.select();
+      document.execCommand('copy');
+      alert('Lien de parrainage copié !');
+    }
+
+    function toggleLoading(type, isLoading) {
+      if (type === 'generate') {
+        document.getElementById('generate-text').style.display = isLoading ? 'none' : 'inline';
+        document.getElementById('generate-spinner').style.display = isLoading ? 'inline-block' : 'none';
+      } else {
+        document.getElementById('task-text').style.display = isLoading ? 'none' : 'inline';
+        document.getElementById('task-spinner').style.display = isLoading ? 'inline-block' : 'none';
+      }
+    }
+
+    function showError(elementId, message) {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.classList.remove('hidden');
+    }
+
+    function checkSponsorLink() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('ref')) {
+        const sponsorId = urlParams.get('ref');
+        if (sponsorId !== userData.uid) {
+          registerSponsor(sponsorId)
+            .then(() => {
+              alert(`Vous avez été parrainé ! Vous recevez 2 crédits bonus.`);
+              loadUserData();
+            })
+            .catch(() => console.log("Erreur parrainage"));
+        }
+      }
+    }
+
+    function showPaymentOptions() {
+      document.getElementById('payment-options').classList.remove('hidden');
+    }
+
+    async function selectPayment(method) {
+      try {
+        await processPayment(method);
+        alert('Paiement effectué ! Votre compte Premium sera activé sous 24h.');
+        loadUserData();
+      } catch (error) {
+        alert('Erreur lors du paiement. Veuillez réessayer.');
+      }
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+      
+      // Configurer le lien de parrainage
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          document.getElementById('sponsor-link').value = 
+            `${window.location.href.split('?')[0]}?ref=${user.uid}`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
